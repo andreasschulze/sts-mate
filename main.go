@@ -14,6 +14,7 @@ import (
 	"net/http"
 	"os"
 	"path/filepath"
+	"runtime"
 	"strings"
 	"time"
 )
@@ -31,6 +32,7 @@ var (
 	serveHTTP         = flag.Bool("http", false, "If true, serves HTTP instead of HTTPS (and does not fetch certs). Useful for serving behind an HTTPS-terminating proxy.")
 	staging           = flag.Bool("staging", false, "If true, uses Let's Encrypt 'staging' environment instead of prod.")
 	acmeEndpoint      = flag.String("acme_endpoint", "", "If set, uses a custom ACME endpoint URL. It doesn't make sense to use this with --staging.")
+	version           = flag.Bool("version", false, "print version and exit.")
 
 	// Policy options.
 	mirrorStsFrom = flag.String("mirror_sts_from", "", "If set (e.g. 'google.com'), proxy the STS policy for this domain.")
@@ -82,6 +84,10 @@ func hostPolicy() autocert.HostPolicy {
 
 func main() {
 	flag.Parse()
+	if (*version) {
+		fmt.Printf("sts-mate, built with %s\n", runtime.Version());
+		os.Exit(0)
+	}
 	if *domains == "" && *myRealHost == "" && !*serveHTTP {
 		// Note that if we are serving HTTP, --domain and --my_real_host do nothing.
 		fmt.Fprintln(os.Stderr, "Must specify --domain or --my_real_host for safety.")
@@ -104,6 +110,8 @@ func main() {
 		fmt.Fprintln(os.Stderr, "Only one of --http, --staging, and --acme_endpoint can be used.")
 		os.Exit(2)
 	}
+
+	fmt.Printf("starting sts-mate, built with %s\n", runtime.Version());
 
 	// Serve policies.
 	var stsMirror string
