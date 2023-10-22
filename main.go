@@ -79,6 +79,21 @@ func hostPolicy() autocert.HostPolicy {
 	}
 }
 
+func access_log(r *http.Request, responseStatusCode int) {
+	var ts = time.Now().Format("02/Jan/2006:15:04:05 -0700")
+	var clientIP string = r.RemoteAddr
+	if colon := strings.LastIndex(clientIP, ":"); colon != -1 {
+		clientIP = clientIP[:colon]
+	}
+	clientIP = strings.ReplaceAll(strings.ReplaceAll(clientIP, "[", ""), "]", "")
+	// https://owasp.org/www-community/attacks/Log_Injection
+	userAgent := strings.Replace(r.UserAgent(), "\n", "", -1)
+	userAgent = strings.Replace(userAgent, "\r", "", -1)
+	referer := strings.Replace(r.Header.Get("Referer"), "\n", "", -1)
+	referer = strings.Replace(referer, "\r", "", -1)
+	fmt.Printf("%s - %s [%s] \"%s %s %s\" %d 42 \"%s\" \"%s\"\n", clientIP, r.Host, ts, r.Method, r.RequestURI, r.Proto, responseStatusCode, referer, userAgent)
+}
+
 func main() {
 	flag.Parse()
 	if *domains == "" && *myRealHost == "" && !*serveHTTP {
@@ -117,7 +132,6 @@ func main() {
 		stsPolicy = []byte(fmt.Sprintf("version: STSv1\r\nmode: %s\r\nmax_age: %s\r\n%s\r\n", *stsMode, *stsMaxAge, strings.Join(mxs, "\r\n")))
 	}
 	http.HandleFunc("/.well-known/mta-sts.txt", func(w http.ResponseWriter, req *http.Request) {
-		log.Printf("%s : %s : %s\n", req.RemoteAddr, req.Host, req.UserAgent())
 		var policy *[]byte
 		if stsMirror != "" {
 			response, err := http.Get(stsMirror)
@@ -137,6 +151,10 @@ func main() {
 		if err != nil {
 			log.Printf("Error serving: %v\n", err)
 		}
+		access_log(req, 200)
+	})
+	http.HandleFunc("/", func(w http.ResponseWriter, req *http.Request) {
+		access_log(req, 404)
 	})
 
 	srv := &http.Server{
