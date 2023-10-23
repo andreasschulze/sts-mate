@@ -5,6 +5,7 @@ import (
 	"golang.org/x/crypto/acme/autocert"
 
 	"context"
+	"crypto/tls"
 	"flag"
 	"fmt"
 	"io/ioutil"
@@ -167,6 +168,7 @@ func main() {
 		}
 		srv.Addr = ":https"
 		srv.TLSConfig = cm.TLSConfig()
+		srv.TLSConfig.MinVersion = tls.VersionTLS12
 	}
 	port := os.Getenv("PORT")
 	if port == "" {
