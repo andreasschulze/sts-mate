@@ -83,8 +83,8 @@ func hostPolicy() autocert.HostPolicy {
 
 func main() {
 	flag.Parse()
-	if (*version) {
-		fmt.Printf("sts-mate, built with %s\n", runtime.Version());
+	if *version {
+		fmt.Printf("sts-mate, built with %s\n", runtime.Version())
 		os.Exit(0)
 	}
 	if *domains == "" && *myRealHost == "" && !*serveHTTP {
@@ -105,12 +105,12 @@ func main() {
 		os.Exit(2)
 	}
 	if *serveHTTP && (*staging || (*acmeEndpoint != "")) ||
-	 (*staging && (*acmeEndpoint != "")) {
+		(*staging && (*acmeEndpoint != "")) {
 		fmt.Fprintln(os.Stderr, "Only one of --http, --staging, and --acme_endpoint can be used.")
 		os.Exit(2)
 	}
 
-	fmt.Printf("starting sts-mate, built with %s\n", runtime.Version());
+	fmt.Printf("starting sts-mate, built with %s\n", runtime.Version())
 
 	// Serve policies.
 	var stsMirror string
