@@ -161,6 +161,15 @@ func main() {
 		srv.Addr = ":https"
 		srv.TLSConfig = cm.TLSConfig()
 		srv.TLSConfig.MinVersion = tls.VersionTLS12
+		srvTLS.TLSConfig.PreferServerCipherSuites = true
+		srvTLS.TLSConfig.CipherSuites = []uint16{
+			 // same as 'openssl11 cipher -v "ECDHE+AESGCM:ECDHE+CHACHA20"' without RSA
+			tls.TLS_ECDHE_ECDSA_WITH_AES_256_GCM_SHA384,
+			tls.TLS_ECDHE_ECDSA_WITH_CHACHA20_POLY1305_SHA256,
+			tls.TLS_ECDHE_ECDSA_WITH_AES_128_GCM_SHA256,
+		}
+		// disable http2 and higher
+		srvTLS.TLSConfig.NextProtos = []string{"http/1.0", "http/1.1", "acme-tls/1"}
 	}
 	port := os.Getenv("PORT")
 	if port == "" {
